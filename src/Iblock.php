@@ -42,7 +42,7 @@ abstract class Iblock
             try {
                 $cache->set(self::getCode() . self::$cacheIblockIdPostfix, $id);
             } catch (InvalidArgumentException $e) {
-                echo 'Не удалось записать в кэш'; // TODO: Должно падать в Лог!
+                AddMessage2Log(__METHOD__ . ": Failed to write to the cache ({$e->getMessage()})");
             }
         }
 
