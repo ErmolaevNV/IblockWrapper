@@ -1,0 +1,34 @@
+{
+  "name": "ermolaevnv/iblock-wrapper",
+  "license": "MIT",
+  "keywords": [
+    "bitrix",
+    "iblock"
+  ],
+  "authors": [
+    {
+      "name" : "Ermolaev Nikita",
+      "email": "ermolaev-nv@ro.ru"
+    }
+  ],
+  "homepage": "https://github.com/ErmolaevNV/IblockWrapper",
+  "require": {
+    "php": ">=7.1.0",
+    "psr/simple-cache": "^1.0",
+    "ermolaevnv/simple-cache-bitrix": "^1.0.5"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "ErmolaevNV\\" : "src/"
+    }
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url":  "git@github.com:ErmolaevNV/SimpleCacheBitrix.git"
+    }
+  ]
+}
