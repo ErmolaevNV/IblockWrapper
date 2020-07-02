@@ -19,7 +19,9 @@ abstract class Iblock
     protected const CODE = '';
 
     public static function getCode(): string {
-        return static::CODE;
+        return static::CODE === ''
+            ? str_replace(__CLASS__ . '\\', '',static::class)
+            : static::CODE;
     }
 
     /**
