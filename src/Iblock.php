@@ -6,6 +6,7 @@ namespace ErmolaevNV;
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
+use Bitrix\Main\Web\DOM\DomException;
 use CIBlock;
 use CIBlockElement;
 use CIBlockProperty;
@@ -280,5 +281,48 @@ abstract class Iblock
 
     public static function getIblock() {
         return CIBlock::GetByID(self::getId())->GetNext();
+    }
+
+    /**
+     * Возвращает список свойств инфоблока
+     *
+     * @param bool $flag Если флаг true, то названиям свойств будет добавлена приставка PROPERTY_
+     *
+     * @return array
+     */
+    public static function getPropertyCodeList($flag = false) {
+        $result = [];
+        $constList = (new \ReflectionClass(static::class))->getConstants();
+        if (!empty($constList)) {
+            foreach($constList as $k => $v){
+                if(preg_match("/^PROPERTY_.*/", $k)){
+                    $result[] = $flag ? 'PROPERTY_'.$v : $v;
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Получить элемент инфоблока по ID
+     *
+     * @param $id
+     *
+     * @return array
+     *
+     * @throws DomException
+     * @throws LoaderException
+     */
+    public static function getById($id) {
+        $e = self::getElementsList(
+            [],
+            ['ID' => $id],
+            false,
+            false,
+            array_merge(['*'], self::getPropertyCodeList(true)));
+        if (empty($e)) {
+            throw new DomException("Element with ID:$id doesn't exist");
+        }
+        return $e[0];
     }
 }
