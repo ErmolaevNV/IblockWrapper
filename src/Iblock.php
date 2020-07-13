@@ -11,19 +11,14 @@ use CIBlock;
 use CIBlockElement;
 use CIBlockProperty;
 use CIBlockSection;
+use ErmolaevNV\Traits\GetCode;
 use Psr\SimpleCache\InvalidArgumentException;
 
 abstract class Iblock
 {
+    use GetCode;
+
     private static $cacheIblockIdPostfix = '_IBLOCK_ID';
-
-    protected const CODE = '';
-
-    public static function getCode(): string {
-        return static::CODE === ''
-            ? str_replace(__CLASS__ . '\\', '',static::class)
-            : static::CODE;
-    }
 
     /**
      * Получить ID Инфоблока
@@ -220,6 +215,8 @@ abstract class Iblock
      * @param array $props
      *
      * @return int|bool
+     *
+     * @throws DomException
      */
     public static function addElement($fields = [], $props = []) {
         $default = [
@@ -240,10 +237,10 @@ abstract class Iblock
         $ib = new CIBlockElement;
         $id = $ib->Add($fields);
 
-        if ($id) {
-            return $id;
+        if(!$id) {
+            throw new DomException('Failed to add item:' . $ib->LAST_ERROR);
         }
-        return false;
+        return $id;
     }
 
     /**
@@ -265,18 +262,6 @@ abstract class Iblock
     }
 
     public static function getIblockType() {
-    }
-
-    /**
-     * Создание класса для Инфоблока по коду
-     *
-     * @param $code
-     *
-     * @return Iblock
-     */
-    public static function iblockFactory($code) {
-        $class = "\\PESKOT\\Iblock\\" . $code;
-        return class_exists($class) ? new $class() : null;
     }
 
     public static function getIblock() {
@@ -324,5 +309,33 @@ abstract class Iblock
             throw new DomException("Element with ID:$id doesn't exist");
         }
         return $e[0];
+    }
+
+    /**
+     * Получить список элементов
+     *
+     * @param $arParams
+     *
+     * @return array|null
+     *
+     * @throws LoaderException
+     */
+    public static function getList($arParams): ?array {
+        $dbRes = self::getElementsListRaw(
+            $arParams['order'] ?? [],
+            $arParams['filter'] ?? [],
+            $arParams['groupBy'] ?? [],
+            $arParams['navStartParams'] ?? [],
+            $arParams['selectFields'] ?? []
+        );
+
+        if ($dbRes instanceof \CIBlockResult) {
+            $list = [];
+            while ($item = $dbRes->GetNext()) {
+                $list[] = $item;
+            }
+            return $list;
+        }
+        return null;
     }
 }

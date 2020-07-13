@@ -3,11 +3,9 @@
 
 namespace ErmolaevNV;
 
+use ErmolaevNV\Traits\GetCode;
+
 abstract class IBlockType
 {
-    protected static $code;
-
-    public static function getCode() {
-        return static::$code;
-    }
+    use GetCode;
 }
