@@ -6,7 +6,7 @@ trait GetCode
 {
     protected static $code = '';
     
-    public static function getCode(): string {
+    public function getCode(): string {
         if (static::$code === '') {
             $arClass = explode('\\', static::class);
             return $arClass[count($arClass)-1];

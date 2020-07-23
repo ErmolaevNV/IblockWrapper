@@ -4,12 +4,13 @@
 namespace tests\migration;
 
 
-use Sprint\Migration\HelperManager;
-
 class Iblock extends Migrate
 {
     public const CODE = 'BitrixWrapperTestIBlock';
     public const NAME = 'BitrixWrapperTestIBlockName';
+
+    public const PROP_CODE_LIST = 'LIST';
+    public const PROP_CODE_NAME = 'NAME';
 
     protected function add() {
         $iblockId = $this->helper->Iblock()->saveIblock(array(
@@ -308,13 +309,13 @@ class Iblock extends Migrate
             'NAME' => 'LIST_NAME',
             'ACTIVE' => 'Y',
             'SORT' => '500',
-            'CODE' => 'list',
+            'CODE' => 'LIST',
             'DEFAULT_VALUE' => '',
             'PROPERTY_TYPE' => 'L',
             'ROW_COUNT' => '1',
             'COL_COUNT' => '30',
             'LIST_TYPE' => 'L',
-            'MULTIPLE' => 'N',
+            'MULTIPLE' => 'Y',
             'XML_ID' => NULL,
             'FILE_TYPE' => '',
             'MULTIPLE_CNT' => '5',
@@ -349,7 +350,7 @@ class Iblock extends Migrate
             'NAME' => 'STRING_NAME',
             'ACTIVE' => 'Y',
             'SORT' => '500',
-            'CODE' => 'name',
+            'CODE' => 'NAME',
             'DEFAULT_VALUE' => '',
             'PROPERTY_TYPE' => 'S',
             'ROW_COUNT' => '1',

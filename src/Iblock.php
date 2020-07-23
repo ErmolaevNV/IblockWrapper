@@ -18,33 +18,37 @@ abstract class Iblock
 {
     use GetCode;
 
-    private static $cacheIblockIdPostfix = '_IBLOCK_ID';
+    private static $id;
+
+    private $cacheIblockIdPostfix;
+    private $cache;
+
+    public function __construct($config = []) {
+        Loader::includeModule('iblock');
+
+        $this->cacheIblockIdPostfix = $config['cache_id_postfix'] ?? '_IBLOCK_ID';
+
+        $this->cache = new SimpleCacheBitrix();
+    }
 
     /**
      * Получить ID Инфоблока
      *
      * @return mixed
      */
-    public static function getId() {
-        try {
-            Loader::includeModule('iblock');
-        } catch (\Exception $e) {
-            return false;
-        }
-        $cache = new SimpleCacheBitrix();
-
-        $id = $cache->get(self::getCode() . self::$cacheIblockIdPostfix);
-        if (!$id) {
-            $id = (int) IblockTable::getList(['filter'=>['CODE'=> self::getCode()]])->fetch()['ID'];
-
-            try {
-                $cache->set(self::getCode() . self::$cacheIblockIdPostfix, $id);
-            } catch (InvalidArgumentException $e) {
-                AddMessage2Log(__METHOD__ . ": Failed to write to the cache ({$e->getMessage()})");
+    public function getId() : int {
+        if (self::$id === null) {
+            self::$id = (int) $this->cache->get($this->getCode() . $this->cacheIblockIdPostfix);
+            if (!self::$id) {
+                self::$id = (int) IblockTable::getList(['filter' => ['CODE' => $this->getCode()]])->fetch()['ID'];
+                try {
+                    $this->cache->set($this->getCode() . $this->cacheIblockIdPostfix, self::$id);
+                } catch (InvalidArgumentException $e) {
+                    AddMessage2Log(__METHOD__ . ": Failed to write to the cache ({$e->getMessage()})");
+                }
             }
         }
-
-        return $id;
+        return self::$id;
     }
 
     /**
@@ -59,14 +63,14 @@ abstract class Iblock
      * @return array|null
      * @throws LoaderException
      */
-    public static function getElementsList(
+    public function getElementsList(
         $arOrder = ['SORT' => 'ASC'],
         $arFilter = [],
         $arGroupBy = false,
         $arNavStartParams = false,
         $arSelectFields = []
     ): ?array {
-        $dbRes = self::getElementsListRaw($arOrder, $arFilter, $arGroupBy, $arNavStartParams, $arSelectFields);
+        $dbRes = $this->getElementsListRaw($arOrder, $arFilter, $arGroupBy, $arNavStartParams, $arSelectFields);
 
         if ($dbRes instanceof \CIBlockResult) {
             $list = [];
@@ -91,16 +95,14 @@ abstract class Iblock
      *
      * @throws LoaderException
      */
-    public static function getElementsListRaw(
+    public function getElementsListRaw(
         $arOrder = ['SORT' => 'ASC'],
         $arFilter = [],
         $arGroupBy = false,
         $arNavStartParams = false,
         $arSelectFields = []
     ) {
-        Loader::includeModule('iblock');
-
-        $arFilter['IBLOCK_ID'] = self::getId();
+        $arFilter['IBLOCK_ID'] = $this->getId();
 
         return CIBlockElement::GetList(
             $arOrder,
@@ -111,13 +113,13 @@ abstract class Iblock
         );
     }
 
-    public static function getTreeList($arFilter = [], $arSelect = []) {
+    public function getTreeList($arFilter = [], $arSelect = []) {
         Loader::includeModule('iblock');
-        $arFilter['IBLOCK_ID'] = self::getId();
+        $arFilter['IBLOCK_ID'] = $this->getId();
         return CIBlockSection::GetTreeList($arFilter, $arSelect);
     }
 
-    public static function getSectionListRaw(
+    public function getSectionListRaw(
         $arOrder = ['SORT' => 'ASC'],
         $arFilter = [],
         $bIncCnt = false,
@@ -126,7 +128,7 @@ abstract class Iblock
     ) {
         Loader::includeModule('iblock');
 
-        $arFilter['IBLOCK_ID'] = self::getId();
+        $arFilter['IBLOCK_ID'] = $this->getId();
 
         return CIBlockSection::GetList(
             $arOrder,
@@ -148,7 +150,7 @@ abstract class Iblock
      *
      * @return array
      */
-    public static function getSectionList(
+    public function getSectionList(
         $arOrder = ['SORT' => 'ASC'],
         $arFilter = [],
         $bIncCnt = false,
@@ -157,7 +159,7 @@ abstract class Iblock
     ): array {
         $list = [];
 
-        $dbRes = self::getSectionListRaw(
+        $dbRes = $this->getSectionListRaw(
             $arOrder,
             $arFilter,
             $bIncCnt,
@@ -171,7 +173,7 @@ abstract class Iblock
         return $list;
     }
 
-    public static function getSectionById($id): array {
+    public function getSectionById($id): array {
         return CIBlockSection::GetByID($id)->GetNext();
     }
 
@@ -184,7 +186,7 @@ abstract class Iblock
      *
      * @throws LoaderException
      */
-    public static function addSection($fields = []) {
+    public function addSection($fields = []) {
         $default = [
             'ACTIVE' => 'Y',
             'IBLOCK_SECTION_ID' => false,
@@ -197,7 +199,7 @@ abstract class Iblock
         ];
 
         $fields = array_replace_recursive($default, $fields);
-        $fields['IBLOCK_ID'] = self::getId();
+        $fields['IBLOCK_ID'] = $this->getId();
 
         $ib = new CIBlockSection;
         $id = $ib->Add($fields);
@@ -218,7 +220,7 @@ abstract class Iblock
      *
      * @throws DomException
      */
-    public static function addElement($fields = [], $props = []) {
+    public function addElement($fields = [], $props = []) {
         $default = [
             'NAME' => 'element',
             'IBLOCK_SECTION_ID' => false,
@@ -228,7 +230,7 @@ abstract class Iblock
         ];
 
         $fields = array_replace_recursive($default, $fields);
-        $fields['IBLOCK_ID'] = self::getId();
+        $fields['IBLOCK_ID'] = $this->getId();
 
         if (!empty($props)) {
             $fields['PROPERTY_VALUES'] = $props;
@@ -237,7 +239,7 @@ abstract class Iblock
         $ib = new CIBlockElement;
         $id = $ib->Add($fields);
 
-        if(!$id) {
+        if (!$id) {
             throw new DomException('Failed to add item:' . $ib->LAST_ERROR);
         }
         return $id;
@@ -251,8 +253,8 @@ abstract class Iblock
      *
      * @return array
      */
-    public static function getProperty($arOrder = [], $arFilter = []): array {
-        $arFilter['IBLOCK_ID'] = self::getId();
+    public function getProperty($arOrder = [], $arFilter = []): array {
+        $arFilter['IBLOCK_ID'] = $this->getId();
         $resdb  = CIBlockProperty::GetList($arOrder, $arFilter);
         $result = [];
         while ($res = $resdb->GetNext()) {
@@ -261,11 +263,12 @@ abstract class Iblock
         return $result;
     }
 
-    public static function getIblockType() {
+    public function getIblockType() {
+        throw new \DomainException('Iblock type is not defined');
     }
 
-    public static function getIblock() {
-        return CIBlock::GetByID(self::getId())->GetNext();
+    public function getIblock() {
+        return CIBlock::GetByID($this->getId())->GetNext();
     }
 
     /**
@@ -275,12 +278,12 @@ abstract class Iblock
      *
      * @return array
      */
-    public static function getPropertyCodeList($flag = false) {
-        $result = [];
+    public function getPropertyCodeList($flag = false) {
+        $result    = [];
         $constList = (new \ReflectionClass(static::class))->getConstants();
         if (!empty($constList)) {
-            foreach($constList as $k => $v){
-                if(preg_match("/^PROPERTY_.*/", $k)){
+            foreach ($constList as $k => $v) {
+                if (preg_match("/^PROPERTY_.*/", $k)) {
                     $result[] = $flag ? 'PROPERTY_'.$v : $v;
                 }
             }
@@ -298,13 +301,14 @@ abstract class Iblock
      * @throws DomException
      * @throws LoaderException
      */
-    public static function getById($id) {
-        $e = self::getElementsList(
+    public function getById($id) {
+        $e = $this->getElementsList(
             [],
             ['ID' => $id],
             false,
             false,
-            array_merge(['*'], self::getPropertyCodeList(true)));
+            array_merge(['*'], $this->getPropertyCodeList(true))
+        );
         if (empty($e)) {
             throw new DomException("Element with ID:$id doesn't exist");
         }
@@ -320,21 +324,35 @@ abstract class Iblock
      *
      * @throws LoaderException
      */
-    public static function getList($arParams): ?array {
-        $dbRes = self::getElementsListRaw(
+    public function getList($arParams = []): ?array {
+        $dbRes = $this->getElementsListRaw(
             $arParams['order'] ?? [],
             $arParams['filter'] ?? [],
-            $arParams['groupBy'] ?? [],
-            $arParams['navStartParams'] ?? [],
-            $arParams['selectFields'] ?? []
+            $arParams['groupBy'] ?? false,
+            $arParams['navStartParams'] ?? false,
+            $arParams['selectFields'] ?? array_merge(['*'], $this->getPropertyCodeList(true))
         );
 
         if ($dbRes instanceof \CIBlockResult) {
             $list = [];
             while ($item = $dbRes->GetNext()) {
-                $list[] = $item;
+                if (isset($list[$item['ID']])) {
+                    foreach ($item as $name => $value) {
+                        if (stripos($name, 'PROPERTY') !== false) {
+                            if (!is_array($list[$item['ID']][$name])) {
+                                if ($list[$item['ID']][$name] !== $value) {
+                                    $list[$item['ID']][$name] = [$list[$item['ID']][$name], $value];
+                                }
+                            } elseif (!in_array($value, $list[$item['ID']][$name], true)) {
+                                $list[$item['ID']][$name][] = $value;
+                            }
+                        }
+                    }
+                } else {
+                    $list[$item['ID']] = $item;
+                }
             }
-            return $list;
+            return array_values($list);
         }
         return null;
     }

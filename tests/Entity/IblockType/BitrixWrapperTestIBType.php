@@ -2,7 +2,9 @@
 
 namespace tests\Entity\IblockType;
 
-class BitrixWrapperTestIBType extends \ErmolaevNV\IBlockType
+use ErmolaevNV\Iblock;
+
+class BitrixWrapperTestIBType extends Iblock
 {
 
 }

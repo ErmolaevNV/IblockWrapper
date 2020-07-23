@@ -4,23 +4,16 @@ use Bitrix\Main\Loader;
 use PHPUnit\Framework\TestCase;
 use tests\Entity\IblockType\BitrixWrapperTestIBType;
 use tests\Entity\IblockType\BitrixWrapperTestIBTypeTest;
+use tests\TestCaseBitrix;
 
-class IBlockTypeTest extends TestCase
+class IBlockTypeTest extends TestCaseBitrix
 {
     protected $classOB;
 
-    protected function setUp() : void
-    {
-        parent::setUp();
-
-        initBitrixCore();
-
-    }
-
     public function testGetCode()
     {
-        $this->assertEquals('BitrixWrapperTestIBType', BitrixWrapperTestIBType::getCode());
-        $this->assertEquals('test', BitrixWrapperTestIBTypeTest::getCode());
+        $this->assertEquals('BitrixWrapperTestIBType', (new BitrixWrapperTestIBType())->getCode());
+        $this->assertEquals('test', (new BitrixWrapperTestIBTypeTest())->getCode());
     }
 
 
