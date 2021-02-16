@@ -18,10 +18,10 @@ abstract class Iblock
 {
     use GetCode;
 
-    private static $id;
+    protected $id;
 
-    private $cacheIblockIdPostfix;
-    private $cache;
+    protected $cacheIblockIdPostfix;
+    protected $cache;
 
     public function __construct($config = []) {
         Loader::includeModule('iblock');
@@ -37,18 +37,18 @@ abstract class Iblock
      * @return mixed
      */
     public function getId() : int {
-        if (self::$id === null) {
-            self::$id = (int) $this->cache->get($this->getCode() . $this->cacheIblockIdPostfix);
-            if (!self::$id) {
-                self::$id = (int) IblockTable::getList(['filter' => ['CODE' => $this->getCode()]])->fetch()['ID'];
+        if ($this->id === null) {
+            $this->id = (int) $this->cache->get($this->getCode() . $this->cacheIblockIdPostfix);
+            if (!$this->id) {
+                $this->id= (int) IblockTable::getList(['filter' => ['CODE' => $this->getCode()]])->fetch()['ID'];
                 try {
-                    $this->cache->set($this->getCode() . $this->cacheIblockIdPostfix, self::$id);
+                    $this->cache->set($this->getCode() . $this->cacheIblockIdPostfix, $this->id);
                 } catch (InvalidArgumentException $e) {
                     AddMessage2Log(__METHOD__ . ": Failed to write to the cache ({$e->getMessage()})");
                 }
             }
         }
-        return self::$id;
+        return $this->id;
     }
 
     /**
